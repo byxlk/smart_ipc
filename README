@@ -1,4 +1,97 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+编译Linux系统
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
+1、编译lichee源码
+编译全志 H3 的BSP源码包必须使用64bit的Linux PC系统，并安装下列软件包，下列操作均基于Ubuntu-14.04 LTS-64bit：
+sudo apt-get install gawk git gnupg flex bison gperf build-essential \
+        zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev \
+        libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-glx:i386 \
+        libgl1-mesa-dev g++-multilib u-boot-tools tofrodos \
+        python-markdown libxml2-utils xsltproc zlib1g-dev:i386
+
+为Debian系统编译全志lichee源码包，进入smart_ipc目录，执行命令：
+./build.sh -p sun8iw7p1 -b nanopi-H3
+该命令会为Debian系统一次性编译好U-boot、Linux内核和模块。
+注：lichee目录里内置了交叉编译器，当使用build.sh脚本进行源码编译时，会自动使用该内置的编译器，所以无需手动安装编译器。
+
+2、打包系统组件
+
+./build.sh pack
+
+该命令会将所有编译生成的可执行文件(包括U-boot、Linux内核)和系统配置文件拷贝到lichee/tools/pack/out/目录以便进行统一管理，并且会该目录下生成 script.bin文件。
+script.bin是全志系列 CPU 的硬件板级配置文件，相关信息请查看script.bin。
+
+下列命令可用于更新TF卡上的U-boot：
+
+./fuse_uboot.sh /dev/sdx
+
+/dev/sdx请替换为实际的TF卡设备文件名。
+uImage和内核模块均位于linux-3.4/output目录下，将uImage拷贝到TF卡的boot分区的根目录即可更新内核。
+
+3、编译U-boot
+如果你想单独编译U-boot，可以执行命令：
+
+./build.sh -p sun8iw7p1 -b nanopi-h3 -m uboot
+
+编译生成的可执行文件需打上全志系列CPU的硬件板级配置补丁后才能烧写到TF卡上运行，执行./build.sh pack能自动完成打补丁的操作。
+
+如何手动为U-boot打补丁请查看H3_Manual_build_howto，执行下列命令更新TF卡上的U-boot：
+./fuse_uboot.sh /dev/sdx
+/dev/sdx请替换为实际的TF卡设备文件名。
+
+4、编译Linux内核
+如果你想单独编译Linux内核，可以执行命令：
+./build.sh -p sun8iw7p1 -b nanopi-h3 -m kernel
+编译完成后uImage和内核模块均位于linux-3.4/output目录下，将uImage拷贝到TF卡的boot分区的根目录即可。
+
+5、清理lichee源码
+./build.sh -p sun8iw7p1_linux -b nanopi-h3 -m clean
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+编译Android系统
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+1、编译全志lichee源码
+编译全志 H3 的BSP源码包必须使用 64bit 的Linux系统，并安装下列软件包，下列操作均基于Ubuntu-14.04 LTS-64bit：
+sudo apt-get install gawk git gnupg flex bison gperf build-essential \
+        zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev \
+        libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-glx:i386 \
+        libgl1-mesa-dev g++-multilib u-boot-tools tofrodos \
+        python-markdown libxml2-utils xsltproc zlib1g-dev:i386
+为Android系统编译lichee源码包，进入目录lichee，执行命令：
+cd smart_ipc
+./build.sh lunch
+然后选择：2. sun8iw7p1-android-dolphin，该命令会为Android系统一次性编译好U-boot、Linux 内核和模块。
+注：lichee目录里内置了交叉编译器，当使用build.sh脚本进行源码编译时，会自动使用该内置的编译器，所以无需手动安装编译器。
+编译Android
+注：编译Android系统前，需先成功编译lichee目录。
+
+2、搭建编译环境
+搭建编译Android的环境建议使用64位的Ubuntu-14.04 LTS-64bit，安装需要的包即可。
+sudo apt-get install bison g++-multilib git gperf libxml2-utils make python-networkx zip
+sudo apt-get install flex libncurses5-dev zlib1g-dev gawk minicom
+更多说明可查看：android_initializing。
+
+3、安装JDK
+使用JDK1.6.0_45版本，下载和安装说明请查看Oracle官方网址：Oracle JDK ，这里假设JDK已经成功安装到路径/usr/lib/jvm/下。
+
+4、编译系统
+cd android
+export PATH=/usr/lib/jvm/jdk1.6.0_45/bin:$PATH
+source ./build/envsetup.sh
+lunch nanopi_h3-eng
+extract-bsp
+make -j8          
+pack
+执行完pack命令后，会在lichee/tools/pack/目录下生成Android系统固件sun8iw7p1_android_nanopi-h3_uart0.img。
+
+5、清理lichee源码
+./build.sh -p sun8iw7p1_android -b nanopi-h3 -m clean
+
+
+/***************************************************************************************************/
 Reference:
 http://wiki.friendlyarm.com/wiki/index.php/NanoPi_M1
 
